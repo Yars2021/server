@@ -35,6 +35,7 @@ public class CommandExecutor {
         AbstractCommand command = serverCommandReader.receive();
 
         if (command != null) {
+            System.out.println("Received: " + command.getCommand());
             command.setTargetCollection(studyGroups);
             CommandOutput commandOutput = command.execute();
             serverOutputWriter.send(commandOutput);
