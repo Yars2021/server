@@ -7,10 +7,16 @@ import java.util.LinkedHashSet;
 public class Main {
     public static void main(String[] args) {
         LinkedHashSet<StudyGroup> studyGroups = new LinkedHashSet<>();
+        ConnectionManager connectionManager = new ConnectionManager(6547);
 
         CommandExecutor commandExecutor = new CommandExecutor(studyGroups);
-        commandExecutor.connect(6547);
-        commandExecutor.executeCommand();
-        commandExecutor.closeConnection();
+        connectionManager.checkConnections();
+
+        for (Connection connection : connectionManager.getConnections()) {
+            commandExecutor.setConnection(connection);
+            commandExecutor.executeCommand();
+        }
+
+        connectionManager.closeAllConnections();
     }
 }
