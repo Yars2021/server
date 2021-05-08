@@ -1,4 +1,7 @@
-package ru.itmo.p3114.s312198;
+package ru.itmo.p3114.s312198.util;
+
+import ru.itmo.p3114.s312198.command.ServerCommandReader;
+import ru.itmo.p3114.s312198.command.ServerOutputWriter;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -18,8 +21,9 @@ public class ConnectionManager {
         Connection connection;
 
         if (clientSocket == null) {
-            System.out.println("No clients found");
+            // todo
         } else {
+            System.out.println("Current socket: " + clientSocket);
             connection = new Connection(new ServerCommandReader(clientSocket), new ServerOutputWriter(clientSocket));
             connections.put(clientSocket, connection);
         }
@@ -45,7 +49,6 @@ public class ConnectionManager {
     public void closeConnection(Socket socket) {
         try {
             connections.get(socket).close();
-            checker.close();
             socket.close();
             connections.remove(socket);
         } catch (IOException ioe) {

@@ -1,4 +1,4 @@
-package ru.itmo.p3114.s312198;
+package ru.itmo.p3114.s312198.string;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

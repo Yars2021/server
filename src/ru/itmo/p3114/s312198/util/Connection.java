@@ -1,4 +1,7 @@
-package ru.itmo.p3114.s312198;
+package ru.itmo.p3114.s312198.util;
+
+import ru.itmo.p3114.s312198.command.ServerCommandReader;
+import ru.itmo.p3114.s312198.command.ServerOutputWriter;
 
 public class Connection {
     private ServerCommandReader serverCommandReader;

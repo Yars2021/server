@@ -1,10 +1,11 @@
-package ru.itmo.p3114.s312198;
+package ru.itmo.p3114.s312198.command;
 
 import ru.itmo.p3114.s312198.util.CommandOutput;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ServerOutputWriter {
     private ObjectOutputStream writer;
@@ -20,14 +21,14 @@ public class ServerOutputWriter {
         }
     }
 
-    public void send(CommandOutput output) {
+    public void send(CommandOutput output) throws SocketException {
         if (writer == null) {
             System.out.println("Unable to write");
         } else {
             try {
                 writer.writeObject(output);
             } catch (IOException ioe) {
-                ioe.printStackTrace();
+                throw new SocketException("Connection closed");
             }
         }
     }
@@ -39,6 +40,7 @@ public class ServerOutputWriter {
     public void close() {
         try {
             writer.close();
+            socket.close();
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }

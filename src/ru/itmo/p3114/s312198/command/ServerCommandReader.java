@@ -1,4 +1,4 @@
-package ru.itmo.p3114.s312198;
+package ru.itmo.p3114.s312198.command;
 
 import ru.itmo.p3114.s312198.util.command.actions.AbstractCommand;
 
@@ -29,8 +29,7 @@ public class ServerCommandReader {
             try {
                 return (AbstractCommand) reader.readObject();
             } catch (IOException ioe) {
-                ioe.printStackTrace();
-                return null;
+                throw new SocketException("Connection closed");
             } catch (ClassNotFoundException cnfe) {
                 cnfe.printStackTrace();
                 return null;
@@ -45,6 +44,7 @@ public class ServerCommandReader {
     public void close() {
         try {
             reader.close();
+            socket.close();
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }

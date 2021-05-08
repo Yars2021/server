@@ -1,4 +1,4 @@
-package ru.itmo.p3114.s312198;
+package ru.itmo.p3114.s312198.util;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -10,7 +10,7 @@ public class Checker {
     public Checker() {
     }
 
-    void openSocket(int port) {
+    public void openSocket(int port) {
         try {
             serverSocket = new ServerSocket(port);
             System.out.println("Server is up");
@@ -19,16 +19,15 @@ public class Checker {
         }
     }
 
-    Socket check() {
+    public Socket check() {
         try {
             return serverSocket.accept();
         } catch (IOException ioe) {
-            ioe.printStackTrace();
             return null;
         }
     }
 
-    void close() {
+    public void close() {
         try {
             serverSocket.close();
         } catch (IOException ioe) {
