@@ -4,8 +4,7 @@ import ru.itmo.p3114.s312198.collection.StudyGroup;
 import ru.itmo.p3114.s312198.util.CommandOutput;
 import ru.itmo.p3114.s312198.util.command.actions.AbstractCommand;
 
-import java.io.IOException;
-import java.net.Socket;
+import java.net.SocketException;
 import java.util.LinkedHashSet;
 
 public class CommandExecutor {
@@ -20,7 +19,11 @@ public class CommandExecutor {
         this.connection = connection;
     }
 
-    public void executeCommand() {
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public void executeCommand() throws SocketException {
         AbstractCommand command = connection.getServerCommandReader().receive();
 
         if (command != null) {

@@ -1,63 +1,61 @@
 package ru.itmo.p3114.s312198;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ConnectionManager {
     private final Checker checker = new Checker();
-    private final HashMap<InetAddress, Connection> connections = new HashMap<>();
-    private Socket clientSocket;
+    private final HashMap<Socket, Connection> connections = new HashMap<>();
 
     public ConnectionManager(int port) {
         checker.openSocket(port);
     }
 
     public void checkConnections() {
-        clientSocket = checker.check();
+        Socket clientSocket = checker.check();
         Connection connection;
 
         if (clientSocket == null) {
             System.out.println("No clients found");
         } else {
             connection = new Connection(new ServerCommandReader(clientSocket), new ServerOutputWriter(clientSocket));
-            connections.put(clientSocket.getInetAddress(), connection);
+            connections.put(clientSocket, connection);
         }
     }
 
-    public Connection getConnection(InetAddress address) {
-        return connections.get(address);
+    public Connection getConnection(Socket socket) {
+        return connections.get(socket);
     }
 
-    public HashMap<InetAddress, Connection> getFullConnections() {
+    public HashMap<Socket, Connection> getFullConnections() {
         return connections;
     }
 
     public ArrayList<Connection> getConnections() {
         ArrayList<Connection> conn = new ArrayList<>();
-        for (InetAddress address : connections.keySet()) {
-            conn.add(connections.get(address));
+        for (Socket socket : connections.keySet()) {
+            conn.add(connections.get(socket));
         }
 
         return conn;
     }
 
-    public void closeConnection(InetAddress address) {
+    public void closeConnection(Socket socket) {
         try {
-            connections.get(address).close();
+            connections.get(socket).close();
             checker.close();
-            clientSocket.close();
-            connections.remove(address);
+            socket.close();
+            connections.remove(socket);
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
     }
 
     public void closeAllConnections() {
-        for (InetAddress address : connections.keySet()) {
-            closeConnection(address);
+        for (Socket socket : connections.keySet()) {
+            closeConnection(socket);
         }
     }
 }

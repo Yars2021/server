@@ -5,20 +5,23 @@ import ru.itmo.p3114.s312198.util.command.actions.AbstractCommand;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ServerCommandReader {
     private ObjectInputStream reader;
+    private Socket socket;
 
     public ServerCommandReader(Socket clientSocket) {
         try {
             reader = new ObjectInputStream(clientSocket.getInputStream());
+            socket = clientSocket;
         } catch (IOException ioe) {
             // todo
             ioe.printStackTrace();
         }
     }
 
-    public AbstractCommand receive() {
+    public AbstractCommand receive() throws SocketException {
         if (reader == null) {
             System.out.println("Unable to read");
             return null;
@@ -33,6 +36,10 @@ public class ServerCommandReader {
                 return null;
             }
         }
+    }
+
+    public Socket getSocket() {
+        return socket;
     }
 
     public void close() {

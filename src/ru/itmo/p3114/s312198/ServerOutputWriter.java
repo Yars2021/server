@@ -8,10 +8,12 @@ import java.net.Socket;
 
 public class ServerOutputWriter {
     private ObjectOutputStream writer;
+    private Socket socket;
 
     public ServerOutputWriter(Socket clientSocket) {
         try {
             writer = new ObjectOutputStream(clientSocket.getOutputStream());
+            socket = clientSocket;
         } catch (IOException ioe) {
             // todo
             ioe.printStackTrace();
@@ -28,6 +30,10 @@ public class ServerOutputWriter {
                 ioe.printStackTrace();
             }
         }
+    }
+
+    public Socket getSocket() {
+        return socket;
     }
 
     public void close() {
