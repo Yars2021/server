@@ -51,8 +51,7 @@ public class ConnectionManager {
             connections.get(socket).close();
             socket.close();
             connections.remove(socket);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+        } catch (IOException ignored) {
         }
     }
 
