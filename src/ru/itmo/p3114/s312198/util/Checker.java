@@ -16,7 +16,7 @@ public class Checker {
             serverSocket = new ServerSocket(port);
             System.out.println("Server is up");
         } catch (IOException ioe) {
-            throw new BindException("Port 5647 has been taken");
+            throw new BindException("Port 6547 has been taken");
         }
     }
 
