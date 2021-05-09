@@ -4,6 +4,7 @@ import ru.itmo.p3114.s312198.command.ServerCommandReader;
 import ru.itmo.p3114.s312198.command.ServerOutputWriter;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +13,7 @@ public class ConnectionManager {
     private final Checker checker = new Checker();
     private final HashMap<Socket, Connection> connections = new HashMap<>();
 
-    public ConnectionManager(int port) {
+    public ConnectionManager(int port) throws BindException {
         checker.openSocket(port);
     }
 
