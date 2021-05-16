@@ -1,4 +1,7 @@
-package ru.itmo.p3114.s312198.util;
+package ru.itmo.p3114.s312198.util.connection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.BindException;
@@ -6,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Checker {
+    static final Logger logger = LoggerFactory.getLogger(Checker.class);
     private ServerSocket serverSocket;
 
     public Checker() {
@@ -14,7 +18,7 @@ public class Checker {
     public void openSocket(int port) throws BindException {
         try {
             serverSocket = new ServerSocket(port);
-            System.out.println("Server is up");
+            logger.info("Server is up");
         } catch (IOException ioe) {
             throw new BindException("Port 6547 has been taken");
         }

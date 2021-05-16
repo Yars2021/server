@@ -1,4 +1,4 @@
-package ru.itmo.p3114.s312198.string;
+package ru.itmo.p3114.s312198.string_exchanger;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -1,8 +1,8 @@
-package ru.itmo.p3114.s312198.command;
+package ru.itmo.p3114.s312198.client_interaction;
 
 import ru.itmo.p3114.s312198.collection.StudyGroup;
 import ru.itmo.p3114.s312198.util.CommandOutput;
-import ru.itmo.p3114.s312198.util.Connection;
+import ru.itmo.p3114.s312198.util.connection.Connection;
 import ru.itmo.p3114.s312198.util.command.actions.AbstractCommand;
 
 import java.net.SocketException;
