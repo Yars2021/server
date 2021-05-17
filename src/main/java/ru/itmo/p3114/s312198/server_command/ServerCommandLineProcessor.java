@@ -7,18 +7,17 @@ import ru.itmo.p3114.s312198.server_command.server_action.Close;
 import ru.itmo.p3114.s312198.server_command.server_action.Help;
 import ru.itmo.p3114.s312198.server_command.server_action.Kick;
 import ru.itmo.p3114.s312198.server_command.server_action.NoOperation;
+import ru.itmo.p3114.s312198.server_command.server_action.Persist;
 import ru.itmo.p3114.s312198.server_command.server_action.SaveData;
 import ru.itmo.p3114.s312198.server_command.server_action.ServerCommands;
 import ru.itmo.p3114.s312198.server_command.server_action.ShowConnections;
-import ru.itmo.p3114.s312198.server_command.server_action.Persist;
-import ru.itmo.p3114.s312198.util.connection.Checker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 
 public class ServerCommandLineProcessor {
-    private static final Logger logger = LoggerFactory.getLogger(Checker.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServerCommandLineProcessor.class);
 
     public AbstractServerCommand parseUserInput(String line) {
         AbstractServerCommand command = null;

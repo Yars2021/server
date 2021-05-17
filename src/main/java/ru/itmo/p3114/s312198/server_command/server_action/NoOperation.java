@@ -5,7 +5,7 @@ import ru.itmo.p3114.s312198.util.command.actions.Status;
 
 public class NoOperation extends AbstractServerCommand {
     public NoOperation() {
-        super("nop", "*");
+        super("nop", ".*");
     }
 
     @Override

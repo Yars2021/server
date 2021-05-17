@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class ShowConnections extends AbstractServerCommand {
     public ShowConnections() {
-        super("show_connections", "*");
+        super("show_connections", ".*");
     }
 
     public ShowConnections(ArrayList<String> arguments) {

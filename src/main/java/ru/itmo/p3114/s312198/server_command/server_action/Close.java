@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class Close extends AbstractServerCommand {
     public Close() {
-        super("close", "*");
+        super("close", ".*");
     }
 
     public Close(ArrayList<String> arguments) {

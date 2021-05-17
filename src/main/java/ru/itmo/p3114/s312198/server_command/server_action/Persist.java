@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class Persist extends AbstractServerCommand {
     public Persist() {
-        super("persist", "*");
+        super("persist", ".*");
     }
 
     public Persist(ArrayList<String> arguments) {
