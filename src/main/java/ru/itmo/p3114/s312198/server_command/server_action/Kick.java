@@ -1,6 +1,6 @@
 package ru.itmo.p3114.s312198.server_command.server_action;
 
-import ru.itmo.p3114.s312198.util.user.UserHashMap;
+import ru.itmo.p3114.s312198.UserHashMap;
 import ru.itmo.p3114.s312198.exception.NoSuchUserException;
 import ru.itmo.p3114.s312198.util.CommandOutput;
 import ru.itmo.p3114.s312198.util.command.actions.Status;
@@ -26,7 +26,9 @@ public class Kick extends AbstractServerCommand {
             ArrayList<String> output = new ArrayList<>();
             for (String arg : arguments) {
                 try {
-                    UserHashMap.get(arg).getConnection().getServerCommandReader().getSocket().close();
+                    UserHashMap.get(arg).getClientSocket().shutdownInput();
+                    UserHashMap.get(arg).getClientSocket().shutdownOutput();
+                    UserHashMap.get(arg).getClientSocket().close();
                     UserHashMap.remove(arg);
                 } catch (IOException ioe) {
                     output.add("Unable to kick a user: Unexpected socket exception");
