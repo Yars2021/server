@@ -1,28 +1,27 @@
 package ru.itmo.p3114.s312198;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.itmo.p3114.s312198.collection.StudyGroup;
+import ru.itmo.p3114.s312198.task.ListenForClients;
+import ru.itmo.p3114.s312198.task.ProcessServerCommands;
 
 import java.util.LinkedHashSet;
 
 public class Server {
-    static final Logger logger = LoggerFactory.getLogger(Server.class);
-
     public static void main(String[] args) {
+        int port = 6547;
         LinkedHashSet<StudyGroup> studyGroups = new LinkedHashSet<>();
         Thread serverCommandThread, clientListenerThread;
 
-        ProcessServerCommands processServerCommands = new ProcessServerCommands(studyGroups);
-        ListenForClients listenForClients = new ListenForClients(6547, studyGroups);
-
-        serverCommandThread = new Thread(processServerCommands);
-        serverCommandThread.setName("SRV_PROC");
+        ListenForClients listenForClients = new ListenForClients(port, studyGroups);
+        ProcessServerCommands processServerCommands = new ProcessServerCommands(studyGroups, listenForClients.getServerSocket());
 
         clientListenerThread = new Thread(listenForClients);
         clientListenerThread.setName("SRV_LSNR");
 
-        serverCommandThread.start();
+        serverCommandThread = new Thread(processServerCommands);
+        serverCommandThread.setName("SRV_PROC");
+
         clientListenerThread.start();
+        serverCommandThread.start();
     }
 }

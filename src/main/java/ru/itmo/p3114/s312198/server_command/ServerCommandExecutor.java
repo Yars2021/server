@@ -3,8 +3,8 @@ package ru.itmo.p3114.s312198.server_command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itmo.p3114.s312198.collection.StudyGroup;
+import ru.itmo.p3114.s312198.command.CommandOutput;
 import ru.itmo.p3114.s312198.server_command.server_action.AbstractServerCommand;
-import ru.itmo.p3114.s312198.util.CommandOutput;
 
 import java.util.LinkedHashSet;
 

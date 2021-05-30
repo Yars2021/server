@@ -1,6 +1,7 @@
-package ru.itmo.p3114.s312198;
+package ru.itmo.p3114.s312198.util;
 
 import ru.itmo.p3114.s312198.exception.NoSuchUserException;
+import ru.itmo.p3114.s312198.transmission.structures.user.User;
 
 import java.util.ArrayList;
 import java.util.Set;
