@@ -17,6 +17,7 @@ public class Help extends AbstractServerCommand {
         reference.put("save", "save arg: saves a copy of the database into a CSV file");
         reference.put("close", "close: closes the server");
         reference.put("persist", "persist: updates the database");
+        reference.put("load", "load: downloads a copy of the database into collection");
     }
 
     public Help(ArrayList<String> arguments) {
@@ -37,6 +38,7 @@ public class Help extends AbstractServerCommand {
             output.add("║ save arg: saves a copy of the database into a CSV file                   ║");
             output.add("║ close: closes the server                                                 ║");
             output.add("║ persist: updates the database                                            ║");
+            output.add("║ load: downloads a copy of the database into collection                   ║");
             output.add("╚══════════════════════════════════════════════════════════════════════════╝");
         } else {
             for (String cmd : arguments) {

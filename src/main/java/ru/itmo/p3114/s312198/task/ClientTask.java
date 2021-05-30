@@ -2,6 +2,7 @@ package ru.itmo.p3114.s312198.task;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.itmo.p3114.s312198.exception.UnknownCommandException;
 import ru.itmo.p3114.s312198.util.SynchronizedCollectionManager;
 import ru.itmo.p3114.s312198.util.UserHashMap;
 import ru.itmo.p3114.s312198.command.CommandOutput;
@@ -21,9 +22,11 @@ public class ClientTask implements Runnable {
     static final Logger logger = LoggerFactory.getLogger(ClientTask.class);
 
     private final Socket socket;
+    private final SynchronizedCollectionManager synchronizedCollectionManager;
 
-    public ClientTask(Socket socket) {
+    public ClientTask(Socket socket, SynchronizedCollectionManager synchronizedCollectionManager) {
         this.socket = socket;
+        this.synchronizedCollectionManager = synchronizedCollectionManager;
     }
 
     @Override
@@ -56,7 +59,7 @@ public class ClientTask implements Runnable {
                         ClientDataPacket clientDataPacket = (ClientDataPacket) channel.read();
                         AbstractCommand command = clientDataPacket.getCommand();
                         //todo add database access check
-                        CommandOutput commandOutput = SynchronizedCollectionManager.execute(command);
+                        CommandOutput commandOutput = synchronizedCollectionManager.execute(command);
                         channel.write(new ServerDataPacket("Executed", commandOutput, true));
                         switch (commandOutput.getStatus()) {
                             case OK:
@@ -73,6 +76,8 @@ public class ClientTask implements Runnable {
                         }
                     } catch (ClassNotFoundException ce) {
                         channel.write(new ServerDataPacket("The data packet has been damaged", null, false));
+                    } catch (UnknownCommandException uce) {
+                        channel.write(new ServerDataPacket("No such command", null, false));
                     }
                 }
             }

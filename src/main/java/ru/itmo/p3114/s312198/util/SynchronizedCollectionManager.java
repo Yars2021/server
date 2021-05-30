@@ -10,39 +10,39 @@ import java.util.LinkedHashSet;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class SynchronizedCollectionManager {
-    private final static LinkedHashSet<StudyGroup> studyGroups = new LinkedHashSet<>();
-    private final static ReentrantLock reentrantLock = new ReentrantLock();
+    private final LinkedHashSet<StudyGroup> studyGroups = new LinkedHashSet<>();
+    private final ReentrantLock reentrantLock = new ReentrantLock();
 
-    public static void clear() {
+    public void clear() {
         reentrantLock.lock();
         studyGroups.clear();
         reentrantLock.unlock();
     }
 
-    public static void add(StudyGroup studyGroup) {
+    public void add(StudyGroup studyGroup) {
         reentrantLock.lock();
         studyGroups.add(studyGroup);
         reentrantLock.unlock();
     }
 
-    public static boolean contains(StudyGroup studyGroup) {
+    public boolean contains(StudyGroup studyGroup) {
         reentrantLock.lock();
         boolean c = studyGroups.contains(studyGroup);
         reentrantLock.unlock();
         return c;
     }
 
-    public static void remove(StudyGroup studyGroup) {
+    public void remove(StudyGroup studyGroup) {
         reentrantLock.lock();
         studyGroups.remove(studyGroup);
         reentrantLock.unlock();
     }
 
-    public static LinkedHashSet<StudyGroup> getCollection() {
+    public LinkedHashSet<StudyGroup> getCollection() {
         return studyGroups;
     }
 
-    public static CommandOutput execute(AbstractCommand command) throws UnknownCommandException {
+    public CommandOutput execute(AbstractCommand command) throws UnknownCommandException {
         if (command == null || command.getCommand() == null) {
             throw new UnknownCommandException();
         }

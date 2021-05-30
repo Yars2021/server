@@ -32,15 +32,16 @@ public class ListenForClients implements Runnable {
 
     @Override
     public void run() {
+        SynchronizedCollectionManager synchronizedCollectionManager = new SynchronizedCollectionManager();
         Socket clientSocket;
 
         if (serverSocket != null) {
-            SynchronizedCollectionManager.clear();
+            synchronizedCollectionManager.clear();
             try {
                 while (running) {
                     clientSocket = serverSocket.accept();
                     System.out.println("A new connection has been created: " + clientSocket);
-                    ClientTask clientTask = new ClientTask(clientSocket);
+                    ClientTask clientTask = new ClientTask(clientSocket, synchronizedCollectionManager);
                     forkJoinPool.execute(clientTask);
                 }
             } catch (IOException ioe) {
