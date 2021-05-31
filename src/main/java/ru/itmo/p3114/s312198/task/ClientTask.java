@@ -2,7 +2,10 @@ package ru.itmo.p3114.s312198.task;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.itmo.p3114.s312198.db.DBHelper;
+import ru.itmo.p3114.s312198.db.DBICommandValidator;
 import ru.itmo.p3114.s312198.exception.UnknownCommandException;
+import ru.itmo.p3114.s312198.server_command.server_action.Persist;
 import ru.itmo.p3114.s312198.util.SynchronizedCollectionManager;
 import ru.itmo.p3114.s312198.util.UserHashMap;
 import ru.itmo.p3114.s312198.command.CommandOutput;
@@ -31,14 +34,14 @@ public class ClientTask implements Runnable {
 
     @Override
     public void run() {
+        long accountID = -1;
         try (CSChannel channel = new CSChannel(socket)) {
             AuthorizationResponse authorizationResponse;
             AuthorizationStatus authorizationStatus = AuthorizationStatus.UNDEFINED;
             String username = "";
             try {
                 AuthorizationRequest authorizationRequest = (AuthorizationRequest) channel.read();
-                // todo Check the account database
-                authorizationStatus = AuthorizationStatus.ALLOWED;
+                authorizationStatus = new DBICommandValidator().authorize(authorizationRequest, accountID);
                 if (authorizationStatus == AuthorizationStatus.ALLOWED) {
                     authorizationResponse = new
                             AuthorizationResponse(true, AuthorizationStatus.ALLOWED.getMsg() +
@@ -58,8 +61,7 @@ public class ClientTask implements Runnable {
                     try {
                         ClientDataPacket clientDataPacket = (ClientDataPacket) channel.read();
                         AbstractCommand command = clientDataPacket.getCommand();
-                        //todo add database access check
-                        CommandOutput commandOutput = synchronizedCollectionManager.execute(command);
+                        CommandOutput commandOutput = synchronizedCollectionManager.execute(command, accountID);
                         channel.write(new ServerDataPacket("Executed", commandOutput, true));
                         switch (commandOutput.getStatus()) {
                             case OK:

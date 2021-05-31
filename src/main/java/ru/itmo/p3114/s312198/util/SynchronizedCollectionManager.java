@@ -1,9 +1,12 @@
 package ru.itmo.p3114.s312198.util;
 
 import ru.itmo.p3114.s312198.collection.StudyGroup;
-import ru.itmo.p3114.s312198.command.CollectionInteracting;
 import ru.itmo.p3114.s312198.command.CommandOutput;
 import ru.itmo.p3114.s312198.command.actions.AbstractCommand;
+import ru.itmo.p3114.s312198.command.actions.marker.CollectionInteracting;
+import ru.itmo.p3114.s312198.command.actions.marker.DatabaseInteracting;
+import ru.itmo.p3114.s312198.db.DBICommandValidator;
+import ru.itmo.p3114.s312198.exception.DBBlockedActionException;
 import ru.itmo.p3114.s312198.exception.UnknownCommandException;
 
 import java.util.LinkedHashSet;
@@ -42,14 +45,25 @@ public class SynchronizedCollectionManager {
         return studyGroups;
     }
 
-    public CommandOutput execute(AbstractCommand command) throws UnknownCommandException {
+    public CommandOutput execute(AbstractCommand command, long creator) throws UnknownCommandException, DBBlockedActionException {
         if (command == null || command.getCommand() == null) {
             throw new UnknownCommandException();
         }
         if (command instanceof CollectionInteracting) {
+            CommandOutput commandOutput;
             reentrantLock.lock();
-            command.setTargetCollection(studyGroups);
-            CommandOutput commandOutput = command.execute();
+            if (command instanceof DatabaseInteracting) {
+                boolean success = new DBICommandValidator().validate(command, creator, this);
+                if (success) {
+                    command.setTargetCollection(studyGroups);
+                    commandOutput = command.execute();
+                } else {
+                    throw new DBBlockedActionException();
+                }
+            } else {
+                command.setTargetCollection(studyGroups);
+                commandOutput = command.execute();
+            }
             reentrantLock.unlock();
             return commandOutput;
         } else {
