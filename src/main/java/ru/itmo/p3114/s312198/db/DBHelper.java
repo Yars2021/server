@@ -14,6 +14,7 @@ import ru.itmo.p3114.s312198.collection.StudyGroup;
 import ru.itmo.p3114.s312198.exception.InvalidPathException;
 import ru.itmo.p3114.s312198.util.PersonBuilder;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.LinkedHashSet;
+import java.util.Properties;
 
 public class DBHelper {
     static final Logger logger = LoggerFactory.getLogger(DBHelper.class);
@@ -30,11 +32,18 @@ public class DBHelper {
     private final HikariDataSource dataSource;
 
     public DBHelper() throws InvalidPathException {
-        String resources = getConfigFromResources();
-        if (resources == null) {
-            throw new InvalidPathException();
+        Properties prop = null;
+        try {
+            prop = new Properties();
+            InputStream in = this.getClass().getResourceAsStream("/db.properties");
+            prop.load(in);
+            if (in != null) {
+                in.close();
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
         }
-        HikariConfig config = new HikariConfig(resources);
+        HikariConfig config = new HikariConfig(prop);
         dataSource = new HikariDataSource(config);
     }
 
