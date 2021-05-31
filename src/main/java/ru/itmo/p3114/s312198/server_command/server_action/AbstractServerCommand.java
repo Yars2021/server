@@ -2,11 +2,13 @@ package ru.itmo.p3114.s312198.server_command.server_action;
 
 import ru.itmo.p3114.s312198.collection.StudyGroup;
 import ru.itmo.p3114.s312198.command.CommandOutput;
+import ru.itmo.p3114.s312198.util.SynchronizedCollectionManager;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
 abstract public class AbstractServerCommand {
+    protected SynchronizedCollectionManager synchronizedCollectionManager;
     protected final String command;
     protected final String inputPattern;
     protected ArrayList<String> arguments;
@@ -21,6 +23,10 @@ abstract public class AbstractServerCommand {
         this.command = command;
         this.arguments = arguments;
         this.inputPattern = inputPattern;
+    }
+
+    public void setCollectionManager(SynchronizedCollectionManager synchronizedCollectionManager) {
+        this.synchronizedCollectionManager = synchronizedCollectionManager;
     }
 
     public void setArguments(ArrayList<String> arguments) {

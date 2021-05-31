@@ -5,7 +5,9 @@ import ru.itmo.p3114.s312198.command.CommandOutput;
 import ru.itmo.p3114.s312198.command.actions.AbstractCommand;
 import ru.itmo.p3114.s312198.command.actions.marker.CollectionInteracting;
 import ru.itmo.p3114.s312198.command.actions.marker.DatabaseInteracting;
+import ru.itmo.p3114.s312198.db.DBHelper;
 import ru.itmo.p3114.s312198.db.DBICommandValidator;
+import ru.itmo.p3114.s312198.db.ValidationVerdict;
 import ru.itmo.p3114.s312198.exception.DBBlockedActionException;
 import ru.itmo.p3114.s312198.exception.UnknownCommandException;
 
@@ -20,6 +22,19 @@ public class SynchronizedCollectionManager {
         reentrantLock.lock();
         studyGroups.clear();
         reentrantLock.unlock();
+    }
+
+    public void load() {
+        DBHelper dbHelper = new DBHelper();
+        clear();
+        for (StudyGroup studyGroup : dbHelper.getStudyGroups()) {
+            add(studyGroup);
+        }
+    }
+
+    public void persist() {
+        DBHelper dbHelper = new DBHelper();
+        dbHelper.loadStudyGroups(studyGroups);
     }
 
     public void add(StudyGroup studyGroup) {
@@ -53,9 +68,10 @@ public class SynchronizedCollectionManager {
             CommandOutput commandOutput;
             reentrantLock.lock();
             if (command instanceof DatabaseInteracting) {
-                boolean success = new DBICommandValidator().validate(command, creator, this);
-                if (success) {
+                ValidationVerdict validationVerdict = new DBICommandValidator().validate(command, creator, this);
+                if (validationVerdict.isSuccess()) {
                     command.setTargetCollection(studyGroups);
+                    command.setId(validationVerdict.getNewId());
                     commandOutput = command.execute();
                 } else {
                     throw new DBBlockedActionException();

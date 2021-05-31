@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import ru.itmo.p3114.s312198.collection.StudyGroup;
 import ru.itmo.p3114.s312198.command.CommandOutput;
 import ru.itmo.p3114.s312198.server_command.server_action.AbstractServerCommand;
+import ru.itmo.p3114.s312198.util.SynchronizedCollectionManager;
 
 import java.util.LinkedHashSet;
 
@@ -17,8 +18,9 @@ public class ServerCommandExecutor {
         collectionCopy = collection;
     }
 
-    public void executeCommand(AbstractServerCommand command) {
+    public void executeCommand(AbstractServerCommand command, SynchronizedCollectionManager synchronizedCollectionManager) {
         command.setCollection(collectionCopy);
+        command.setCollectionManager(synchronizedCollectionManager);
         CommandOutput commandOutput = command.execute();
 
         switch (commandOutput.getStatus()) {

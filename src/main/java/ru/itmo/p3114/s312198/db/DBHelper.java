@@ -11,9 +11,12 @@ import ru.itmo.p3114.s312198.collection.FormOfEducation;
 import ru.itmo.p3114.s312198.collection.Location;
 import ru.itmo.p3114.s312198.collection.Person;
 import ru.itmo.p3114.s312198.collection.StudyGroup;
+import ru.itmo.p3114.s312198.exception.InvalidPathException;
 import ru.itmo.p3114.s312198.util.PersonBuilder;
-import ru.itmo.p3114.s312198.util.StudyGroupBuilder;
 
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,12 +27,28 @@ import java.util.LinkedHashSet;
 public class DBHelper {
     static final Logger logger = LoggerFactory.getLogger(DBHelper.class);
 
-    private final HikariConfig config;
     private final HikariDataSource dataSource;
 
-    public DBHelper(String pathToConfig) {
-        config = new HikariConfig(pathToConfig);
+    public DBHelper() throws InvalidPathException {
+        String resources = getConfigFromResources();
+        if (resources == null) {
+            throw new InvalidPathException();
+        }
+        HikariConfig config = new HikariConfig(resources);
         dataSource = new HikariDataSource(config);
+    }
+
+    private String getConfigFromResources() {
+        String pathToFile = null;
+        try {
+            URL fileURL = this.getClass().getClassLoader().getResource("db.properties");
+            if (fileURL != null) {
+                pathToFile = URLDecoder.decode(fileURL.getPath(), StandardCharsets.UTF_8.name());
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+        return pathToFile;
     }
 
     public void closeDataSource() {
@@ -99,6 +118,7 @@ public class DBHelper {
             }
         } catch (SQLException sqle) {
             logger.error(sqle.getMessage());
+            return null;
         }
         return account;
     }
@@ -141,7 +161,7 @@ public class DBHelper {
             try (Connection connection = dataSource.getConnection()) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement("insert into persons " +
                         "(id, name, height, color, nationality, location_x, location_y, location_z, location_name) " +
-                        "values (nextval('seq_persons'), ?, ?, ?, ?, ?, ?, ?, ?) returning id")) {
+                        "values (nextval('seq_person'), ?, ?, ?, ?, ?, ?, ?, ?) returning id")) {
                     preparedStatement.setString(1, person.getName());
                     preparedStatement.setLong(2, person.getHeight());
                     preparedStatement.setInt(3, person.getHairColor().getValue());
@@ -151,6 +171,11 @@ public class DBHelper {
                         preparedStatement.setFloat(6, person.getLocation().getY());
                         preparedStatement.setFloat(7, person.getLocation().getZ());
                         preparedStatement.setString(8, person.getLocation().getName());
+                    } else {
+                        preparedStatement.setFloat(5, 0);
+                        preparedStatement.setFloat(6, 0);
+                        preparedStatement.setFloat(7, 0);
+                        preparedStatement.setString(8, "");
                     }
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         if (resultSet.next()) {
@@ -234,6 +259,7 @@ public class DBHelper {
                     if (studyGroup.getGroupAdmin() == null) {
                         preparedStatement.setNull(9, Types.INTEGER);
                     } else {
+                        studyGroup.setGroupAdmin(createPerson(studyGroup.getGroupAdmin()));
                         preparedStatement.setLong(9, studyGroup.getGroupAdmin().getId());
                     }
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -320,10 +346,15 @@ public class DBHelper {
     public LinkedHashSet<StudyGroup> getStudyGroups() {
         LinkedHashSet<StudyGroup> studyGroups = new LinkedHashSet<>();
         try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement preparedStatement = connection.prepareStatement("select * from studs.s312198.study_groups")) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("select " +
+                    "id, name, coord_x, coord_y, created, creator," +
+                    "students_count, should_be_expelled," +
+                    "transferred_students, form_of_education," +
+                    "group_admin from studs.s312198.study_groups")) {
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
                     StudyGroup studyGroup = new StudyGroup();
+                    studyGroup.setId(resultSet.getLong(1));
                     studyGroup.setName(resultSet.getString(2));
                     studyGroup.setCoordinates(new Coordinates(resultSet.getLong(3), resultSet.getDouble(4)));
                     studyGroup.setCreationDate(resultSet.getDate(5).toLocalDate());
@@ -339,12 +370,22 @@ public class DBHelper {
                 }
             }
         } catch (SQLException sqle) {
+            sqle.printStackTrace();
             logger.error(sqle.getMessage());
         }
         return studyGroups;
     }
 
     public void loadStudyGroups(LinkedHashSet<StudyGroup> studyGroups) {
-
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("delete from study_groups")) {
+                preparedStatement.execute();
+            }
+            for (StudyGroup studyGroup : studyGroups) {
+                createStudyGroup(studyGroup);
+            }
+        } catch (SQLException sqle) {
+            logger.error(sqle.getMessage());
+        }
     }
 }

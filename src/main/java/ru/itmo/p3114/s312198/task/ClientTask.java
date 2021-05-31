@@ -2,21 +2,21 @@ package ru.itmo.p3114.s312198.task;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.itmo.p3114.s312198.db.DBHelper;
-import ru.itmo.p3114.s312198.db.DBICommandValidator;
-import ru.itmo.p3114.s312198.exception.UnknownCommandException;
-import ru.itmo.p3114.s312198.server_command.server_action.Persist;
-import ru.itmo.p3114.s312198.util.SynchronizedCollectionManager;
-import ru.itmo.p3114.s312198.util.UserHashMap;
 import ru.itmo.p3114.s312198.command.CommandOutput;
 import ru.itmo.p3114.s312198.command.actions.AbstractCommand;
-import ru.itmo.p3114.s312198.server_command.AuthorizationStatus;
+import ru.itmo.p3114.s312198.db.AccountData;
+import ru.itmo.p3114.s312198.db.DBICommandValidator;
+import ru.itmo.p3114.s312198.exception.DBBlockedActionException;
+import ru.itmo.p3114.s312198.exception.UnknownCommandException;
+import ru.itmo.p3114.s312198.db.AuthorizationStatus;
 import ru.itmo.p3114.s312198.transmission.CSChannel;
 import ru.itmo.p3114.s312198.transmission.structures.authorization.AuthorizationRequest;
 import ru.itmo.p3114.s312198.transmission.structures.authorization.AuthorizationResponse;
 import ru.itmo.p3114.s312198.transmission.structures.packet.ClientDataPacket;
 import ru.itmo.p3114.s312198.transmission.structures.packet.ServerDataPacket;
 import ru.itmo.p3114.s312198.transmission.structures.user.User;
+import ru.itmo.p3114.s312198.util.SynchronizedCollectionManager;
+import ru.itmo.p3114.s312198.util.UserHashMap;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -37,11 +37,15 @@ public class ClientTask implements Runnable {
         long accountID = -1;
         try (CSChannel channel = new CSChannel(socket)) {
             AuthorizationResponse authorizationResponse;
+            AccountData accountData;
             AuthorizationStatus authorizationStatus = AuthorizationStatus.UNDEFINED;
             String username = "";
             try {
+                DBICommandValidator dbiCommandValidator = new DBICommandValidator();
                 AuthorizationRequest authorizationRequest = (AuthorizationRequest) channel.read();
-                authorizationStatus = new DBICommandValidator().authorize(authorizationRequest, accountID);
+                accountData = dbiCommandValidator.authorize(authorizationRequest);
+                authorizationStatus = accountData.getAuthorizationStatus();
+                accountID = accountData.getAccountId();
                 if (authorizationStatus == AuthorizationStatus.ALLOWED) {
                     authorizationResponse = new
                             AuthorizationResponse(true, AuthorizationStatus.ALLOWED.getMsg() +
@@ -80,6 +84,8 @@ public class ClientTask implements Runnable {
                         channel.write(new ServerDataPacket("The data packet has been damaged", null, false));
                     } catch (UnknownCommandException uce) {
                         channel.write(new ServerDataPacket("No such command", null, false));
+                    } catch (DBBlockedActionException dbe) {
+                        channel.write(new ServerDataPacket("Access denied", null, false));
                     }
                 }
             }

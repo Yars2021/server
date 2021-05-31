@@ -10,16 +10,18 @@ import java.util.LinkedHashSet;
 import java.util.concurrent.ForkJoinPool;
 
 public class ListenForClients implements Runnable {
+    private final SynchronizedCollectionManager synchronizedCollectionManager;
     private final ForkJoinPool forkJoinPool = new ForkJoinPool();
     private ServerSocket serverSocket;
     private boolean running = true;
 
-    public ListenForClients(int port, LinkedHashSet<StudyGroup> studyGroups) {
+    public ListenForClients(int port, LinkedHashSet<StudyGroup> studyGroups, SynchronizedCollectionManager synchronizedCollectionManager) {
         try {
             this.serverSocket = new ServerSocket(port);
         } catch (IOException ioe) {
             this.serverSocket = null;
         }
+        this.synchronizedCollectionManager = synchronizedCollectionManager;
     }
 
     public void setRunning(boolean running) {
@@ -32,7 +34,6 @@ public class ListenForClients implements Runnable {
 
     @Override
     public void run() {
-        SynchronizedCollectionManager synchronizedCollectionManager = new SynchronizedCollectionManager();
         Socket clientSocket;
 
         if (serverSocket != null) {

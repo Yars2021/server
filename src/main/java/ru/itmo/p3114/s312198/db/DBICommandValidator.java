@@ -7,7 +7,6 @@ import ru.itmo.p3114.s312198.command.CommandLineProcessor;
 import ru.itmo.p3114.s312198.command.Commands;
 import ru.itmo.p3114.s312198.command.actions.AbstractCommand;
 import ru.itmo.p3114.s312198.exception.ValueOutOfBoundsException;
-import ru.itmo.p3114.s312198.server_command.AuthorizationStatus;
 import ru.itmo.p3114.s312198.transmission.structures.authorization.AuthorizationRequest;
 import ru.itmo.p3114.s312198.util.FieldParser;
 import ru.itmo.p3114.s312198.util.LocationBuilder;
@@ -15,13 +14,13 @@ import ru.itmo.p3114.s312198.util.PersonBuilder;
 import ru.itmo.p3114.s312198.util.StudyGroupBuilder;
 import ru.itmo.p3114.s312198.util.SynchronizedCollectionManager;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Locale;
 
 public class DBICommandValidator {
-    private final DBHelper dbHelper = new DBHelper("C:\\Users\\yaros\\Desktop\\ИТМО\\" +
-            "Семестр 2\\Лабораторные\\Программирование\\lab6\\server\\src\\main\\resources\\db.properties");
+    private final DBHelper dbHelper = new DBHelper();
 
     private StudyGroup convert(ArrayList<String> arguments, int shift) throws ValueOutOfBoundsException {
         Location location = null;
@@ -52,38 +51,41 @@ public class DBICommandValidator {
                 .toStudyGroup();
     }
 
-    public boolean validate(AbstractCommand command, long creator, SynchronizedCollectionManager collectionManager) {
+    public ValidationVerdict validate(AbstractCommand command, long creator, SynchronizedCollectionManager collectionManager) {
         try {
+            long newId;
             StudyGroup studyGroup;
             switch (Commands.valueOf(command.getCommand().toUpperCase(Locale.ROOT))) {
                 case ADD:
                     studyGroup = convert(command.getArguments(), 0);
                     studyGroup.setCreationDate(LocalDate.now());
                     studyGroup.setCreator(creator);
-                    return dbHelper.createStudyGroup(studyGroup).getId() != -1;
+                    newId = dbHelper.createStudyGroup(studyGroup).getId();
+                    return new ValidationVerdict(newId != -1, newId);
                 case ADD_IF_MAX:
                     studyGroup = convert(command.getArguments(), 0);
                     studyGroup.setCreationDate(LocalDate.now());
                     studyGroup.setCreator(creator);
                     for (StudyGroup sg : dbHelper.getStudyGroups()) {
                         if (studyGroup.compareTo(sg) < 0) {
-                            return true;
+                            return new ValidationVerdict(false, -1);
                         }
                     }
-                    return dbHelper.createStudyGroup(studyGroup).getId() != -1;
+                    newId = dbHelper.createStudyGroup(studyGroup).getId();
+                    return new ValidationVerdict(newId != -1, newId);
                 case EXECUTE_SCRIPT:
                     CommandLineProcessor commandLineProcessor = new CommandLineProcessor();
                     collectionManager.execute(commandLineProcessor.parseFileInput(command.getArguments(), 0), creator);
-                    return true;
+                    return new ValidationVerdict(true, -1);
                 case REMOVE_ALL_BY_SHOULD_BE_EXPELLED:
                     for (StudyGroup sg : dbHelper.getStudyGroups()) {
                         if (sg.getShouldBeExpelled() == FieldParser.parseShouldBeExpelled(command.getArguments().get(0))) {
                             dbHelper.deleteStudyGroupById(sg.getId(), creator);
                         }
                     }
-                    return true;
+                    return new ValidationVerdict(true, -1);
                 case REMOVE_BY_ID:
-                    return dbHelper.deleteStudyGroupById(Long.parseLong(command.getArguments().get(0)), creator);
+                    return new ValidationVerdict(dbHelper.deleteStudyGroupById(Long.parseLong(command.getArguments().get(0)), creator), -1);
                 case REMOVE_ANY_BY_TRANSFERRED_STUDENTS:
                     for (StudyGroup sg : dbHelper.getStudyGroups()) {
                         if (sg.getTransferredStudents() == FieldParser.parseTransferredStudents(command.getArguments().get(0))) {
@@ -91,7 +93,7 @@ public class DBICommandValidator {
                             break;
                         }
                     }
-                    return true;
+                    return new ValidationVerdict(true, -1);
                 case REMOVE_GREATER:
                     studyGroup = convert(command.getArguments(), 0);
                     for (StudyGroup sg : dbHelper.getStudyGroups()) {
@@ -99,23 +101,56 @@ public class DBICommandValidator {
                             dbHelper.deleteStudyGroupById(sg.getId(), creator);
                         }
                     }
-                    return true;
+                    new ValidationVerdict(true, -1);
                 case UPDATE:
                     studyGroup = convert(command.getArguments(), 1);
                     studyGroup.setCreationDate(LocalDate.now());
                     studyGroup.setCreator(creator);
                     studyGroup.setId(Long.parseLong(command.getArguments().get(0)));
-                    return dbHelper.updateStudyGroup(studyGroup, creator);
+                    return new ValidationVerdict(dbHelper.updateStudyGroup(studyGroup, creator), -1);
+                case CLEAR:
+                    return new ValidationVerdict(true, -1);
                 default:
-                    return false;
+                    return new ValidationVerdict(false, -1);
             }
         } catch (ValueOutOfBoundsException ignored) {
-            return false;
+            return new ValidationVerdict(false, -1);
         }
     }
 
-    public AuthorizationStatus authorize(AuthorizationRequest authorizationRequest, long accountId) {
-
-        return AuthorizationStatus.ALLOWED;
+    public AccountData authorize(AuthorizationRequest authorizationRequest) {
+        AuthorizationStatus authorizationStatus;
+        Account account;
+        long id = -1;
+        switch (authorizationRequest.getType()) {
+            case "LOG":
+                account = dbHelper.getAccountByLoginAndCredentials(
+                        authorizationRequest.getUserSignature().getUsername(), authorizationRequest.getUserSignature().getPassHash());
+                if (account == null || account.getId() == null) {
+                    authorizationStatus = AuthorizationStatus.INCORRECT_CREDENTIALS;
+                } else {
+                    id = account.getId();
+                    authorizationStatus = AuthorizationStatus.ALLOWED;
+                }
+                break;
+            case "REG":
+                try {
+                    account = dbHelper.createAccount(
+                            new Account(-1L, authorizationRequest.getUserSignature().getUsername(), authorizationRequest.getUserSignature().getPassHash()));
+                    if (account == null) {
+                        authorizationStatus = AuthorizationStatus.UNDEFINED;
+                    } else {
+                        id = account.getId();
+                        authorizationStatus = AuthorizationStatus.ALLOWED;
+                    }
+                } catch (SQLException sqle) {
+                    authorizationStatus = AuthorizationStatus.USERNAME_IS_TAKEN;
+                    return new AccountData(authorizationStatus, id);
+                }
+                break;
+            default:
+                authorizationStatus = AuthorizationStatus.BANNED;
+        }
+        return new AccountData(authorizationStatus, id);
     }
 }
